@@ -28,7 +28,10 @@ This web app is built for manufacturing optimization via Bayesian Optimization.
 As a toy example, we look into maximizing a function $f(x_1, x_2) = -x_1^2 - (x_2 - 1) ^ 2 + 1.$ This function should be thought as a the groundtruth generation process for certain physical processes. 
 '''
 
-st.write('## Step I: Set feature value range.')
+st.write('## I: Set feature value search range.')
+'''
+These ranges determines the search space. Usually will be provided by domain experts based on expert knowledge. For this problem, we can just use the default value listed below.
+'''
 x1_min = st.number_input('x1_min', value=-1.0)
 x1_max = st.number_input('x1_max', value=1.0)
 x2_min = st.number_input('x2_min', value=-1.0)
@@ -46,13 +49,18 @@ if 'opt' not in st.session_state:
 if 'params' not in st.session_state:
     st.session_state['params'] = None
 
+if 'hint' not in st.session_state:
+    st.session_state['hint'] = None
+
 
 utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)    
 logs = {'x1':[], 'x2':[], 'target':[]}
 
 st.write('## (Optional): Provide initial data points.')
 '''
-Initially provide 3 random guesses and their corresponding target values. 
+Initially provide 3 random guesses and their corresponding target values.
+
+It's useful if there are historical data.
 
 (This feature is still under construction.)
 '''
@@ -92,15 +100,17 @@ def suggest_value():
     next_point = st.session_state.opt.suggest(utility)
     target_ = black_box_function(next_point['x1'], next_point['x2'])
     st.session_state['params'] = next_point
-    st.write(f'hint {target_}')
+    st.session_state['hint'] = target_
 
 def register(target):
     st.session_state['opt'].register(params = st.session_state.params, target=target)
 
 st.button('Suggest', on_click=suggest_value)
 value = st.number_input('target', value=0.0)
-st.write(st.session_state.params)
-st.write(value)
+st.write(f'Suggested params {st.session_state.params}')
+target_ = st.session_state['hint']
+st.write(f'Groundtruth target value hint: {target_}')
+st.write(f'User measured target input: {value}')
 st.button('Resiger', on_click=register, args=(value,))
 
     
